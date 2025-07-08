@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './AdminPanel.css';
 import { 
   Settings, 
   Shield, 
@@ -16,8 +17,19 @@ import {
   RefreshCw,
   Activity,
   Lock,
-  Unlock
+  Unlock,
+  Tag,
+  ShoppingCart
 } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+
+const sidebarLinks = [
+  { to: '/', label: 'Dashboard', icon: BarChart3 },
+  { to: '/coupons', label: 'Coupons', icon: Tag },
+  { to: '/sales', label: 'Sales', icon: ShoppingCart },
+  { to: '/returns', label: 'Returns Management', icon: FileText },
+  { to: '/admin', label: 'System Health', icon: Activity },
+];
 
 const AdminPanel = ({ wallet }) => {
   const [stats, setStats] = useState({});
@@ -27,6 +39,7 @@ const AdminPanel = ({ wallet }) => {
   const [selectedTab, setSelectedTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const location = useLocation();
 
   useEffect(() => {
     const loadAdminData = async () => {
@@ -188,306 +201,35 @@ const AdminPanel = ({ wallet }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-primary"></div>
+      <div className="loading-spinner">
+        <div className="spinner"></div>
       </div>
     );
   }
 
+  // Only render the sidebar navigation for MainLayout
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-text-primary">Admin Panel</h1>
-        <p className="text-text-secondary">System administration and fraud prevention tools</p>
+    <div>
+      <div className="flex items-center mb-8 px-2">
+        <Shield className="h-8 w-8 text-accent-primary mr-2" />
+        <span className="text-xl font-bold text-text-primary">ReturnShield+</span>
       </div>
-
-      {/* Tab Navigation */}
-      <div className="card">
-        <div className="flex space-x-1">
-          {[
-            { id: 'overview', name: 'Overview', icon: BarChart3 },
-            { id: 'audit', name: 'Audit Logs', icon: FileText },
-            { id: 'fraud', name: 'Fraud Alerts', icon: AlertTriangle },
-            { id: 'system', name: 'System Health', icon: Activity }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setSelectedTab(tab.id)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors duration-200 ${
-                selectedTab === tab.id
-                  ? 'bg-accent-primary text-text-cta'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-background-input'
-              }`}
-            >
-              <tab.icon className="h-4 w-4" />
-              <span>{tab.name}</span>
-            </button>
+      <nav>
+        <ul className="space-y-2">
+          {sidebarLinks.map(link => (
+            <li key={link.to}>
+              <Link
+                to={link.to}
+                className={`flex items-center px-4 py-2 rounded-lg transition-colors font-medium text-base ${location.pathname === link.to ? 'bg-accent-primary/20 text-accent-primary' : 'text-text-secondary hover:bg-hover-blue/20 hover:text-accent-primary'}`}
+              >
+                <link.icon className="h-5 w-5 mr-3" />
+                {link.label}
+              </Link>
+            </li>
           ))}
-        </div>
-      </div>
-
-      {/* Overview Tab */}
-      {selectedTab === 'overview' && (
-        <div className="space-y-6">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-text-secondary text-sm">Total Transactions</p>
-                  <p className="text-2xl font-bold text-text-primary">{stats.totalTransactions}</p>
-                </div>
-                <div className="p-3 bg-accent-primary/10 rounded-lg">
-                  <BarChart3 className="h-6 w-6 text-accent-primary" />
-                </div>
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-text-secondary text-sm">Total Value</p>
-                  <p className="text-2xl font-bold text-text-primary">{formatCurrency(stats.totalValue)}</p>
-                </div>
-                <div className="p-3 bg-status-success/10 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-status-success" />
-                </div>
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-text-secondary text-sm">Fraud Attempts</p>
-                  <p className="text-2xl font-bold text-text-primary">{stats.fraudAttempts}</p>
-                </div>
-                <div className="p-3 bg-status-alert/10 rounded-lg">
-                  <AlertTriangle className="h-6 w-6 text-status-alert" />
-                </div>
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-text-secondary text-sm">Active Users</p>
-                  <p className="text-2xl font-bold text-text-primary">{stats.activeUsers}</p>
-                </div>
-                <div className="p-3 bg-accent-secondary/10 rounded-lg">
-                  <Users className="h-6 w-6 text-accent-secondary" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Fraud Prevention Stats */}
-          <div className="card">
-            <h3 className="font-semibold text-text-primary mb-4">Fraud Prevention Performance</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-status-success mb-2">
-                  {((stats.fraudPrevented / stats.fraudAttempts) * 100).toFixed(1)}%
-                </div>
-                <p className="text-text-secondary">Success Rate</p>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-status-alert mb-2">
-                  {stats.fraudAttempts - stats.fraudPrevented}
-                </div>
-                <p className="text-text-secondary">Failed Attempts</p>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-accent-primary mb-2">
-                  {formatCurrency(stats.totalValue * 0.05)}
-                </div>
-                <p className="text-text-secondary">Potential Loss Prevented</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Audit Logs Tab */}
-      {selectedTab === 'audit' && (
-        <div className="space-y-6">
-          {/* Search and Filter */}
-          <div className="card">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-muted" />
-                  <input
-                    type="text"
-                    placeholder="Search logs..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="input-field pl-10 w-full"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  className="input-field"
-                >
-                  <option value="all">All Actions</option>
-                  <option value="RETURN_PROCESSED">Returns</option>
-                  <option value="COUPON_REDEEMED">Coupons</option>
-                  <option value="FRAUD_DETECTED">Fraud</option>
-                  <option value="PURCHASE_TOKEN_CREATED">Purchases</option>
-                </select>
-                <button className="btn-secondary flex items-center space-x-2">
-                  <Download className="h-4 w-4" />
-                  <span>Export</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Audit Logs Table */}
-          <div className="card">
-            <div className="space-y-4">
-              {filteredLogs.map((log) => (
-                <div key={log.id} className="flex items-center justify-between p-4 bg-background-input rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    {getActionIcon(log.action)}
-                    <div>
-                      <p className="font-medium text-text-primary">{log.details}</p>
-                      <p className="text-sm text-text-secondary">
-                        {log.user} • {formatDate(log.timestamp)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <span className={`font-semibold ${getStatusColor(log.status)}`}>
-                      {log.amount !== 0 && formatCurrency(log.amount)}
-                    </span>
-                    <span className={`text-sm font-medium ${getStatusColor(log.status)}`}>
-                      {log.status.toUpperCase()}
-                    </span>
-                    <button className="p-1 hover:bg-background-card rounded">
-                      <Eye className="h-4 w-4 text-text-muted" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Fraud Alerts Tab */}
-      {selectedTab === 'fraud' && (
-        <div className="space-y-6">
-          <div className="card">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-text-primary">Active Fraud Alerts</h3>
-              <button className="btn-secondary flex items-center space-x-2">
-                <RefreshCw className="h-4 w-4" />
-                <span>Refresh</span>
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              {fraudAlerts.map((alert) => (
-                <div key={alert.id} className="flex items-center justify-between p-4 bg-background-input rounded-lg border-l-4 border-status-alert">
-                  <div className="flex items-center space-x-4">
-                    <AlertTriangle className="h-5 w-5 text-status-alert" />
-                    <div>
-                      <p className="font-medium text-text-primary">{alert.description}</p>
-                      <p className="text-sm text-text-secondary">
-                        {alert.user} • {formatDate(alert.timestamp)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <span className={`text-sm font-medium ${getSeverityColor(alert.severity)}`}>
-                      {alert.severity.toUpperCase()}
-                    </span>
-                    <span className={`text-sm font-medium ${getStatusColor(alert.status)}`}>
-                      {alert.status.toUpperCase()}
-                    </span>
-                    <button className="btn-secondary">
-                      Investigate
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* System Health Tab */}
-      {selectedTab === 'system' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="card">
-              <h3 className="font-semibold text-text-primary mb-4">System Status</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-text-secondary">Overall Health</span>
-                  <span className="text-status-success font-semibold">{stats.systemHealth}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-text-secondary">Blockchain Connection</span>
-                  <span className="text-status-success font-semibold">Connected</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-text-secondary">Smart Contracts</span>
-                  <span className="text-status-success font-semibold">Active</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-text-secondary">API Services</span>
-                  <span className="text-status-success font-semibold">Online</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="card">
-              <h3 className="font-semibold text-text-primary mb-4">Security Status</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-text-secondary">Multi-Signature</span>
-                  <Lock className="h-4 w-4 text-status-success" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-text-secondary">Fraud Detection</span>
-                  <Lock className="h-4 w-4 text-status-success" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-text-secondary">Audit Logging</span>
-                  <Lock className="h-4 w-4 text-status-success" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-text-secondary">Encryption</span>
-                  <Lock className="h-4 w-4 text-status-success" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <h3 className="font-semibold text-text-primary mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button className="btn-secondary flex items-center justify-center space-x-2">
-                <RefreshCw className="h-4 w-4" />
-                <span>Sync Blockchain</span>
-              </button>
-              <button className="btn-secondary flex items-center justify-center space-x-2">
-                <Download className="h-4 w-4" />
-                <span>Export Data</span>
-              </button>
-              <button className="btn-secondary flex items-center justify-center space-x-2">
-                <Settings className="h-4 w-4" />
-                <span>System Settings</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        </ul>
+      </nav>
+      <div className="mt-auto px-2 text-xs text-text-muted">Wallet: {wallet}</div>
     </div>
   );
 };

@@ -12,7 +12,7 @@ import {
   ShoppingCart
 } from 'lucide-react';
 
-const Dashboard = ({ wallet }) => {
+const Dashboard = () => {
   const [stats, setStats] = useState({
     totalPurchases: 0,
     activeCoupons: 0,
@@ -23,6 +23,7 @@ const Dashboard = ({ wallet }) => {
   });
 
   const [loading, setLoading] = useState(true);
+  const [wallet, setWallet] = useState('');
 
   useEffect(() => {
     // Simulate loading data
@@ -119,6 +120,20 @@ const Dashboard = ({ wallet }) => {
     );
   };
 
+  const connectWallet = async () => {
+    if (window.ethereum) {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        setWallet(accounts[0]);
+        console.log('Connected wallet:', accounts[0]);
+      } catch (err) {
+        alert('Wallet connection failed: ' + (err?.message || err));
+      }
+    } else {
+      alert('MetaMask is not installed.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -128,15 +143,21 @@ const Dashboard = ({ wallet }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="dashboard-wrapper max-w-7xl mx-auto space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-text-primary mb-1">Dashboard</h1>
         <p className="text-text-secondary">Welcome to ReturnShield+ - Your fraud prevention overview</p>
+        <button
+          onClick={connectWallet}
+          className="py-2 px-4 rounded bg-accent-primary text-button-cta-text font-semibold"
+        >
+          {wallet ? `Connected: ${wallet.slice(0, 6)}...${wallet.slice(-4)}` : 'Connect Wallet'}
+        </button>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
@@ -187,7 +208,7 @@ const Dashboard = ({ wallet }) => {
       </div>
 
       {/* Value and Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         {/* Total Value */}
         <div className="card">
           <div className="flex items-center space-x-3 mb-4">
@@ -239,7 +260,7 @@ const Dashboard = ({ wallet }) => {
       </div>
 
       {/* Quick Actions */}
-      <div className="card">
+      <div className="card p-6">
         <h3 className="font-semibold text-text-primary mb-4">Quick Actions</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button className="flex items-center space-x-3 p-4 bg-background-input hover:bg-border-default rounded-lg transition-colors duration-200">

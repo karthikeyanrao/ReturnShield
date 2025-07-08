@@ -495,4 +495,12 @@
 .empty-state p {
   color: #B0B0B0;
   font-size: 1rem;
+}
+
+.sidebar {
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  background: var(--background-card, #18181b);
+  /* ...other styles... */
 } 

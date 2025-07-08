@@ -1,0 +1,225 @@
+/* SalesPage.css */
+
+.sales-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem;
+}
+
+.sales-header {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  color: var(--accent-primary, #2563eb);
+}
+
+.sales-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.sales-product-card {
+  color: var(--text-primary, #fff);
+  background: var(--background-card, #18181b);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid var(--border-default, #27272a);
+  transition: box-shadow 0.2s;
+}
+.sales-product-card:hover {
+  box-shadow: 0 4px 16px rgba(37,99,235,0.12);
+}
+.sales-product-card img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  margin-bottom: 0.5rem;
+  border-radius: 0.5rem;
+}
+.sales-product-card .name {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+.sales-product-card .price {
+  color: var(--text-secondary, #a1a1aa);
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+.sales-product-card .add-btn {
+  background: var(--accent-primary, #2563eb);
+  color: var(--button-cta-text, #fff);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.sales-product-card .add-btn:hover {
+  background: var(--accent-secondary, #1d4ed8);
+}
+
+.sales-cart {
+  background: var(--background-card, #18181b);
+  color: var(--text-primary, #fff);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 1.5rem;
+  border: 1px solid var(--border-default, #27272a);
+  margin-bottom: 2rem;
+}
+.sales-cart table {
+  width: 100%;
+  margin-bottom: 1rem;
+  border-collapse: collapse;
+}
+.sales-cart th, .sales-cart td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+.sales-cart th {
+  color: var(--text-secondary, #a1a1aa);
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-default, #27272a);
+}
+.sales-cart td {
+  border-bottom: 1px solid var(--border-default, #27272a);
+}
+.sales-cart input[type='number'] {
+  width: 60px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--border-input, #27272a);
+  background: var(--background-input, #23232b);
+  color: var(--text-primary, #fff);
+}
+.sales-cart .remove-btn {
+  color: var(--status-alert, #ef4444);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+.sales-cart .remove-btn:hover {
+  text-decoration: underline;
+}
+.sales-cart .summary {
+  text-align: right;
+  margin-top: 1rem;
+}
+.sales-cart .summary div {
+  margin-bottom: 0.25rem;
+}
+.sales-cart .total {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--accent-primary, #2563eb);
+}
+.sales-cart .pay-btn {
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 0.9rem 0;
+  background: var(--accent-primary, #2563eb);
+  color: var(--button-cta-text, #fff);
+  border: none;
+  border-radius: 0.6rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.sales-cart .pay-btn:hover {
+  background: var(--hover-blue, #1d4ed8);
+}
+
+.sales-coupon-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.sales-coupon-row input[type='text'] {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--border-input, #27272a);
+  background: var(--background-input, #23232b);
+  color: var(--text-primary, #fff);
+}
+.sales-coupon-row button {
+  padding: 0.5rem 1.2rem;
+  border-radius: 0.4rem;
+  background: var(--accent-secondary, #1d4ed8);
+  color: var(--button-cta-text, #fff);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.sales-coupon-row button:disabled {
+  background: #444;
+  cursor: not-allowed;
+}
+.sales-coupon-row .success {
+  color: var(--status-success, #22c55e);
+  font-weight: 600;
+}
+.sales-coupon-row .error {
+  color: var(--status-alert, #ef4444);
+  font-weight: 600;
+}
+
+.sales-receipt {
+  background: var(--background-card, #18181b);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 1.5rem;
+  border: 1px solid var(--border-default, #27272a);
+  margin-top: 2rem;
+}
+.sales-receipt h2 {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.sales-receipt table {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  border-collapse: collapse;
+}
+.sales-receipt th, .sales-receipt td {
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+}
+.sales-receipt th {
+  color: var(--text-secondary, #a1a1aa);
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-default, #27272a);
+}
+.sales-receipt td {
+  border-bottom: 1px solid var(--border-default, #27272a);
+}
+.sales-receipt .summary {
+  text-align: right;
+  margin-top: 0.5rem;
+}
+.sales-receipt .summary div {
+  margin-bottom: 0.15rem;
+}
+.sales-receipt .total {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--accent-primary, #2563eb);
+}
+.sales-receipt .coupon {
+  color: var(--status-success, #22c55e);
+  font-weight: 600;
+  margin-top: 0.2rem;
+} 

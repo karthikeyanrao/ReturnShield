@@ -1,13 +1,65 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { Shield, Wallet, Receipt, Tag, Users, Settings, LogOut, Menu, X } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import WalletConnect from './components/WalletConnect';
-import PurchaseTokens from './components/PurchaseTokens';
-import CouponTokens from './components/CouponTokens';
 import Returns from './components/Returns';
 import AdminPanel from './components/AdminPanel';
+import Login from './components/Login';
+import CouponsPage from './components/CouponsPage';
+import SalesPage from './components/SalesPage';
+import { db } from './firebase';
+import { doc, getDoc, updateDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import MainLayout from './components/MainLayout';
+
+const SESSION_TIMEOUT_MINUTES = 15;
+
+function useSession() {
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const sessionId = localStorage.getItem('sessionId');
+      if (!sessionId) {
+        setSession(null);
+        setLoading(false);
+        return;
+      }
+      const sessionRef = doc(db, 'sessions', sessionId);
+      const sessionSnap = await getDoc(sessionRef);
+      if (!sessionSnap.exists()) {
+        localStorage.removeItem('sessionId');
+        setSession(null);
+        setLoading(false);
+        return;
+      }
+      const data = sessionSnap.data();
+      const lastActive = data.lastActive?.toDate ? data.lastActive.toDate() : new Date();
+      const now = new Date();
+      const diff = (now - lastActive) / 1000 / 60;
+      if (diff > SESSION_TIMEOUT_MINUTES) {
+        // Session expired
+        await deleteDoc(sessionRef);
+        localStorage.removeItem('sessionId');
+        setSession(null);
+        setLoading(false);
+        return;
+      }
+      // Update lastActive
+      await updateDoc(sessionRef, { lastActive: serverTimestamp() });
+      setSession(data);
+      setLoading(false);
+    };
+    checkSession();
+    // Optionally, set up interval to check session periodically
+    // const interval = setInterval(checkSession, 60000);
+    // return () => clearInterval(interval);
+  }, []);
+
+  return { session, loading, setSession };
+}
 
 function App() {
   const [wallet, setWallet] = useState(null);
@@ -93,103 +145,34 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-background-primary">
-        {/* Sidebar */}
-        <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-background-card border-r border-border-default transform transition-transform duration-300 ease-in-out ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 lg:static lg:inset-0`}>
-          <div className="flex items-center justify-between h-16 px-6 border-b border-border-default">
-            <div className="flex items-center space-x-2">
-              <Shield className="h-8 w-8 text-accent-primary" />
-              <span className="text-xl font-bold text-text-primary">ReturnShield+</span>
-            </div>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-2 rounded-md text-text-secondary hover:text-text-primary"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          
-          <nav className="mt-6 px-3">
-            <div className="space-y-1">
-              {navigation.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-text-secondary hover:text-text-primary hover:bg-background-primary transition-colors duration-200"
-                >
-                  <item.icon className="mr-3 h-5 w-5" />
-                  {item.name}
-                </a>
-              ))}
-            </div>
-          </nav>
-
-          {/* Wallet Info */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border-default">
-            <div className="flex items-center space-x-2 mb-3">
-              <Wallet className="h-4 w-4 text-accent-secondary" />
-              <span className="text-sm font-medium text-text-secondary">Connected Wallet</span>
-            </div>
-            <div className="text-xs text-text-muted mb-3 break-all">
-              {wallet?.address}
-            </div>
-            <button
-              onClick={disconnectWallet}
-              className="flex items-center w-full px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-background-primary rounded-md transition-colors duration-200"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Disconnect
-            </button>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="lg:pl-64">
-          {/* Top Bar */}
-          <div className="sticky top-0 z-40 bg-background-card border-b border-border-default">
-            <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 rounded-md text-text-secondary hover:text-text-primary"
-              >
-                <Menu className="h-6 w-6" />
-              </button>
-              
-              <div className="flex items-center space-x-4">
-                <div className="hidden sm:block">
-                  <div className="flex items-center space-x-2">
-                    <div className="h-2 w-2 bg-status-success rounded-full"></div>
-                    <span className="text-sm text-text-secondary">Connected to Ethereum</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Page Content */}
-          <main className="p-4 sm:p-6 lg:p-8">
-            <Routes>
-              <Route path="/" element={<Dashboard wallet={wallet} />} />
-              <Route path="/purchases" element={<PurchaseTokens wallet={wallet} />} />
-              <Route path="/coupons" element={<CouponTokens wallet={wallet} />} />
-              <Route path="/returns" element={<Returns wallet={wallet} />} />
-              <Route path="/admin" element={<AdminPanel wallet={wallet} />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-        </div>
-
-        {/* Mobile overlay */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-overlay-modal lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-      </div>
+      <AppRoutes />
     </Router>
+  );
+}
+
+function AppRoutes() {
+  const { session, loading, setSession } = useSession();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !session) {
+      navigate('/login');
+    }
+  }, [loading, session, navigate]);
+
+  if (loading) return <div className="loading-spinner"><div className="spinner"></div></div>;
+
+  return (
+    <Routes>
+      <Route path="/login" element={<Login onLogin={s => { setSession(s); navigate('/'); }} />} />
+      <Route element={session ? <MainLayout /> : <Navigate to="/login" />}>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/coupons" element={<CouponsPage />} />
+        <Route path="/sales" element={<SalesPage />} />
+        <Route path="/returns" element={<Returns />} />
+        <Route path="/admin" element={<AdminPanel />} />
+      </Route>
+    </Routes>
   );
 }
 

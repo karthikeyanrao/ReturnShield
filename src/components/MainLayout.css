@@ -1,0 +1,26 @@
+.main-layout {
+  display: flex;
+  min-height: 10vh;
+  background: var(--background-primary, #111);
+}
+
+.sidebar {
+  width: 20px;
+  min-width: 220px;
+  max-width: 300px;
+  background: var(--background-card, #18181b);
+  border-right: 1px solid var(--border-default, #27272a);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 10;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+}
+
+.main-content {
+  flex: 1;
+  padding: 0 2rem 2rem 2rem;
+  min-width: 0;
+  background: var(--background-primary, #111);
+  overflow-x: auto;
+}
