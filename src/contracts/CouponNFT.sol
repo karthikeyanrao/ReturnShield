@@ -7,12 +7,22 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract CouponNFT is ERC721URIStorage, Ownable {
     uint256 private _nextTokenId = 1;
 
+    event ReceiptMinted(address indexed to, uint256 indexed tokenId, string billNo, string tokenURI);
+
     constructor() ERC721("CouponNFT", "CPN") Ownable(msg.sender) {}
 
     function mintCoupon(address to, string memory couponCode, string memory tokenURI) public returns (uint256) {
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, tokenURI);
+        return tokenId;
+    }
+
+    function mintReceipt(address to, string memory billNo, string memory tokenURI) public returns (uint256) {
+        uint256 tokenId = _nextTokenId++;
+        _safeMint(to, tokenId);
+        _setTokenURI(tokenId, tokenURI);
+        emit ReceiptMinted(to, tokenId, billNo, tokenURI);
         return tokenId;
     }
 

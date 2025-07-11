@@ -176,50 +176,103 @@
   font-weight: 600;
 }
 
-.sales-receipt {
-  background: var(--background-card, #18181b);
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  padding: 1.5rem;
-  border: 1px solid var(--border-default, #27272a);
-  margin-top: 2rem;
+/* Modal overlay and content */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.sales-receipt h2 {
-  font-size: 1.1rem;
+.modal-content {
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  padding: 2rem 2.5rem;
+  min-width: 350px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Receipt styling */
+.sales-receipt {
+  font-family: 'Menlo', 'Consolas', 'monospace', 'Arial', sans-serif;
+  background: #f8f8f8;
+  border-radius: 0.7rem;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  margin: 0 auto;
+  min-width: 320px;
+  max-width: 420px;
+}
+.receipt-title {
+  text-align: center;
+  font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
+  color: #2d3748;
 }
-.sales-receipt table {
+.receipt-meta, .receipt-billno {
+  text-align: center;
+  font-size: 1rem;
+  color: #555;
+}
+.receipt-table {
   width: 100%;
-  margin-bottom: 0.5rem;
   border-collapse: collapse;
+  margin-bottom: 1rem;
 }
-.sales-receipt th, .sales-receipt td {
+.receipt-table th, .receipt-table td {
+  border-bottom: 1px solid #e2e8f0;
   padding: 0.4rem 0.6rem;
   text-align: left;
 }
-.sales-receipt th {
-  color: var(--text-secondary, #a1a1aa);
-  font-weight: 500;
-  border-bottom: 1px solid var(--border-default, #27272a);
+.receipt-table th {
+  background: #f1f5f9;
+  color: #4a5568;
+  font-size: 0.98rem;
 }
-.sales-receipt td {
-  border-bottom: 1px solid var(--border-default, #27272a);
+.receipt-summary {
+  margin-top: 0.7rem;
+  font-size: 1.08rem;
 }
-.sales-receipt .summary {
-  text-align: right;
+.receipt-summary .total {
+  font-size: 1.15rem;
+  font-weight: bold;
+  color: #2b6cb0;
   margin-top: 0.5rem;
 }
-.sales-receipt .summary div {
-  margin-bottom: 0.15rem;
+.coupon {
+  color: #38a169;
+  font-weight: 500;
+  margin-top: 0.3rem;
 }
-.sales-receipt .total {
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: var(--accent-primary, #2563eb);
+.receipt-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.2rem;
+  gap: 1rem;
 }
-.sales-receipt .coupon {
-  color: var(--status-success, #22c55e);
+.download-btn, .close-btn {
+  background: #2b6cb0;
+  color: #fff;
+  border: none;
+  border-radius: 0.4rem;
+  padding: 0.6rem 1.2rem;
   font-weight: 600;
-  margin-top: 0.2rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.download-btn:hover {
+  background: #3182ce;
+}
+.close-btn {
+  background: #718096;
+}
+.close-btn:hover {
+  background: #4a5568;
 } 

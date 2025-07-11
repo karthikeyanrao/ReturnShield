@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import CouponNFTABI from '../contracts/CouponNFT.json';
+
 import CouponMint from './CouponMint';
 
 const COUPON_CONTRACT_ADDRESS = '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9';
@@ -26,7 +26,7 @@ const CouponsPage = () => {
       setLoading(false);
     };
     fetchCoupons();
-  }, [showMint]); // refetch after mint
+  }, [showMint]); 
 
   return (
     <div className="max-w-4xl mx-auto py-10">

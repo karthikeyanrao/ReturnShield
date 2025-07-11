@@ -82,7 +82,7 @@ const CouponMint = ({ onCancel }) => {
         try {
           const provider = new ethers.BrowserProvider(window.ethereum);
           const signer = await provider.getSigner();
-          const tx = await mintCouponOnChainWithTx({ to: form.owner, couponCode, tokenURI }, form.contractAddress, signer);
+          const tx = await mintCouponOnChainWithTx({ to: form.owner, couponCode, tokenURI, value: form.value, expiry: form.expiry }, form.contractAddress, signer);
           txHash = tx.hash;
         } catch (walletErr) {
           setError('MetaMask/Wallet error: ' + (walletErr?.message || walletErr));
@@ -149,11 +149,28 @@ const CouponMint = ({ onCancel }) => {
   );
 };
 
-async function mintCouponOnChainWithTx({ to, couponCode, tokenURI }, contractAddress, signer) {
+async function mintCouponOnChainWithTx({ to, couponCode, tokenURI, value, expiry }, contractAddress, signer) {
   try {
     const contract = new ethers.Contract(contractAddress, CouponNFTABI.abi, signer);
     const tx = await contract.mintCoupon(to, couponCode, tokenURI);
-    await tx.wait();
+    const receipt = await tx.wait();
+    // Find the tokenId from the Transfer event
+    const transferEvent = receipt.logs
+      .map(log => contract.interface.parseLog(log))
+      .find(e => e && e.name === 'Transfer');
+    const tokenId = transferEvent ? transferEvent.args.tokenId.toString() : null;
+
+    // Save couponCode, tokenId, etc. in Firestore
+    await addDoc(collection(db, 'coupons'), {
+      couponCode,
+      tokenId,
+      tokenURI,
+      value: parseFloat(value),      // use value from arguments
+      expiry: new Date(expiry),      // use expiry from arguments
+      hash: tx.hash,
+      createdAt: new Date(),
+      createdBy: 'admin',
+    });
     return tx;
   } catch (err) {
     throw err;
