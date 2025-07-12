@@ -275,4 +275,12 @@
 }
 .close-btn:hover {
   background: #4a5568;
+}
+
+.low-stock-msg {
+  color: #ef4444;
+  font-weight: 600;
+  font-size: 0.98rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.5px;
 } 

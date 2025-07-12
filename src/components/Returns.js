@@ -284,6 +284,7 @@ function Returns() {
         expiry,
         returnBillNo: returnReceipt.returnBillNo,
         contract: couponContract,
+        hash: mintTxHash, // Store as hash for consistency
         mintTxHash,
         tokenId,
         createdAt: serverTimestamp(),

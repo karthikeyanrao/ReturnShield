@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Bar, Line, Doughnut } from 'react-chartjs-2';
+import { Chart, CategoryScale, LinearScale, BarElement, PointElement, LineElement, ArcElement, Tooltip, Legend, TimeScale } from 'chart.js';
+import 'chartjs-adapter-date-fns';
 import { 
   Shield, 
   Receipt, 
@@ -12,8 +15,10 @@ import {
   ShoppingCart
 } from 'lucide-react';
 import { db } from '../firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+
+Chart.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, ArcElement, Tooltip, Legend, TimeScale);
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -29,19 +34,73 @@ const Dashboard = () => {
   const [wallet, setWallet] = useState('');
   const navigate = useNavigate();
   const [showAllModal, setShowAllModal] = useState(false);
+  const [inventory, setInventory] = useState([]);
+  const [lowStockItems, setLowStockItems] = useState([]);
+  const [dismissedLowStock, setDismissedLowStock] = useState([]);
+  const [editingStock, setEditingStock] = useState({}); // { [itemId]: true/false }
+  const [stockInputs, setStockInputs] = useState({}); // { [itemId]: value }
+  const [salesChartData, setSalesChartData] = useState(null);
+  const [inventoryChartData, setInventoryChartData] = useState(null);
+  const [couponChartData, setCouponChartData] = useState(null);
 
   useEffect(() => {
     const loadDashboardData = async () => {
       setLoading(true);
       // Fetch all data from Firestore
-      const [receiptsSnap, couponsSnap, returnsSnap] = await Promise.all([
+      const [receiptsSnap, couponsSnap, returnsSnap, inventorySnap] = await Promise.all([
         getDocs(collection(db, 'receipts')),
         getDocs(collection(db, 'coupons')),
         getDocs(collection(db, 'returns')),
+        getDocs(collection(db, 'inventory')),
       ]);
       const receipts = receiptsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const coupons = couponsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const returns = returnsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const inventoryData = inventorySnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setInventory(inventoryData);
+      // Low stock items
+      const lowStock = inventoryData.filter(item => item.qty < 10);
+      setLowStockItems(lowStock);
+      // Sales over time (by day)
+      const salesByDate = {};
+      receipts.forEach(r => {
+        const date = r.time ? new Date(r.time).toLocaleDateString() : 'Unknown';
+        salesByDate[date] = (salesByDate[date] || 0) + (r.total || 0);
+      });
+      const salesDates = Object.keys(salesByDate).sort((a, b) => new Date(a) - new Date(b));
+      setSalesChartData({
+        labels: salesDates,
+        datasets: [{
+          label: 'Sales ($)',
+          data: salesDates.map(d => salesByDate[d]),
+          backgroundColor: '#2563eb',
+        }],
+      });
+      // Inventory trends (current stock)
+      setInventoryChartData({
+        labels: inventoryData.map(i => i.name),
+        datasets: [{
+          label: 'Stock',
+          data: inventoryData.map(i => i.qty),
+          backgroundColor: '#22c55e',
+        }],
+      });
+      // Coupon usage (by month)
+      const couponByMonth = {};
+      coupons.forEach(c => {
+        let date = c.createdAt && c.createdAt.toDate ? c.createdAt.toDate() : (c.created ? new Date(c.created) : new Date());
+        const month = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}`;
+        couponByMonth[month] = (couponByMonth[month] || 0) + 1;
+      });
+      const couponMonths = Object.keys(couponByMonth).sort();
+      setCouponChartData({
+        labels: couponMonths,
+        datasets: [{
+          label: 'Coupons Minted',
+          data: couponMonths.map(m => couponByMonth[m]),
+          backgroundColor: '#f59e42',
+        }],
+      });
       // Calculate stats
       const now = new Date();
       const activeCoupons = coupons.filter(c => {
@@ -98,6 +157,86 @@ const Dashboard = () => {
     };
     loadDashboardData();
   }, []);
+
+  // Update stock handler
+  const handleUpdateStock = async (itemId) => {
+    const newQty = parseInt(stockInputs[itemId]);
+    if (isNaN(newQty) || newQty < 0) return;
+    // Update in Firebase
+    const itemRef = doc(db, 'inventory', itemId);
+    await updateDoc(itemRef, { qty: newQty });
+    // Refresh inventory
+    const inventorySnap = await getDocs(collection(db, 'inventory'));
+    const inventoryData = inventorySnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    setInventory(inventoryData);
+    setEditingStock({ ...editingStock, [itemId]: false });
+    setStockInputs({ ...stockInputs, [itemId]: '' });
+    // Update low stock items
+    setLowStockItems(inventoryData.filter(item => item.qty < 10 && !dismissedLowStock.includes(item.id)));
+  };
+
+  // Dismiss notification handler
+  const handleDismissLowStock = (itemId) => {
+    setDismissedLowStock(prev => [...prev, itemId]);
+    setLowStockItems(prev => prev.filter(item => item.id !== itemId));
+  };
+
+  const handleGoToInventory = () => {
+    navigate('/inventory');
+  };
+
+  // Chart gradient plugin
+  const getBarGradient = (ctx, chartArea) => {
+    const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+    gradient.addColorStop(0, '#2563eb');
+    gradient.addColorStop(1, '#60a5fa');
+    return gradient;
+  };
+
+  // Chart options
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#23232b',
+        titleColor: '#fff',
+        bodyColor: '#f59e42',
+        borderColor: '#2563eb',
+        borderWidth: 1,
+        padding: 12,
+        caretSize: 8,
+        displayColors: false,
+      },
+    },
+    animation: {
+      duration: 1200,
+      easing: 'easeOutBounce',
+    },
+    elements: {
+      bar: {
+        borderRadius: 12,
+        backgroundColor: function(context) {
+          const chart = context.chart;
+          const { ctx, chartArea } = chart;
+          if (!chartArea) return '#2563eb';
+          return getBarGradient(ctx, chartArea);
+        },
+        borderSkipped: false,
+        hoverBackgroundColor: '#f59e42',
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { color: '#2563eb', font: { weight: 600 } },
+      },
+      y: {
+        grid: { color: '#e5e7eb' },
+        ticks: { color: '#18181b', font: { weight: 600 } },
+      },
+    },
+  };
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -156,6 +295,35 @@ const Dashboard = () => {
         <p className="text-text-secondary">Welcome to ReturnShield+ - Your fraud prevention overview</p>
         
       </div>
+      {/* Low Stock Notification */}
+      {lowStockItems.length > 0 && (
+        <div style={{background:'#fff3cd',color:'#856404',border:'1px solid #ffeeba',borderRadius:8,padding:'1rem',marginBottom:'1.5rem',fontWeight:600,boxShadow:'0 4px 24px #f59e4280',animation:'fadeIn 0.7s'}}>
+          <span style={{marginRight:8}}><AlertTriangle style={{display:'inline',verticalAlign:'middle'}} /></span>
+          <span>Low Stock Alert: </span>
+          {lowStockItems.map(item => (
+            <span key={item.id} style={{marginRight:18,display:'inline-block'}}>
+              {item.name} ({item.qty} left)
+              {editingStock[item.id] ? (
+                <>
+                  <input
+                    type="number"
+                    value={stockInputs[item.id] || ''}
+                    onChange={e => setStockInputs({ ...stockInputs, [item.id]: e.target.value })}
+                    style={{marginLeft:8,width:60,padding:'2px 6px',borderRadius:4,border:'1px solid #ccc'}}
+                  />
+                  <button style={{marginLeft:6,background:'#22c55e',color:'#fff',border:'none',borderRadius:4,padding:'2px 10px',fontWeight:600,cursor:'pointer'}} onClick={() => handleUpdateStock(item.id)}>Save</button>
+                  <button style={{marginLeft:6,background:'#f59e42',color:'#fff',border:'none',borderRadius:4,padding:'2px 10px',fontWeight:600,cursor:'pointer'}} onClick={() => setEditingStock({...editingStock,[item.id]:false})}>Cancel</button>
+                </>
+              ) : (
+                <>
+                  <button style={{marginLeft:8,background:'#2563eb',color:'#fff',border:'none',borderRadius:4,padding:'2px 10px',fontWeight:600,cursor:'pointer'}} onClick={handleGoToInventory}>Update Stock</button>
+                  <button style={{marginLeft:6,background:'#ef4444',color:'#fff',border:'none',borderRadius:4,padding:'2px 10px',fontWeight:600,cursor:'pointer'}} onClick={() => handleDismissLowStock(item.id)}>Close</button>
+                </>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="card">
@@ -291,6 +459,26 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+      {/* Analytics Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+        <div className="card p-4 animated-card">
+          <h3 className="font-semibold text-text-primary mb-2">Sales Over Time</h3>
+          {salesChartData && <Bar data={salesChartData} options={chartOptions} />}
+        </div>
+        <div className="card p-4 animated-card">
+          <h3 className="font-semibold text-text-primary mb-2">Inventory Stock</h3>
+          {inventoryChartData && <Bar data={inventoryChartData} options={chartOptions} />}
+        </div>
+        <div className="card p-4 animated-card">
+          <h3 className="font-semibold text-text-primary mb-2">Coupon Usage</h3>
+          {couponChartData && <Bar data={couponChartData} options={chartOptions} />}
+        </div>
+      </div>
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px);} to { opacity: 1; transform: none; } }
+        .animated-card { animation: fadeIn 0.8s cubic-bezier(.4,2,.3,1) both; box-shadow: 0 4px 32px #2563eb22; transition: box-shadow 0.3s; }
+        .animated-card:hover { box-shadow: 0 8px 48px #2563eb44; }
+      `}</style>
     </div>
   );
 };

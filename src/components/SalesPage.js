@@ -1,25 +1,12 @@
-import React, { useState } from 'react';
-import { collection, getDocs, addDoc, serverTimestamp, query, where, deleteDoc, doc } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { collection, getDocs, addDoc, serverTimestamp, query, where, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import './SalesPage.css';
 import { ethers } from 'ethers';
 import CouponNFT from '../contracts/CouponNFT.json';
 import html2pdf from 'html2pdf.js';
 
-// Mock product catalog
-const PRODUCTS = [
-  { id: '1001', name: 'Apple', price: 0.99, image: 'https://placehold.co/60x60/apple' },
-  { id: '1002', name: 'Milk', price: 2.49, image: 'https://placehold.co/60x60/milk' },
-  { id: '1003', name: 'Bread', price: 1.99, image: 'https://placehold.co/60x60/bread' },
-  { id: '1004', name: 'Eggs', price: 3.29, image: 'https://placehold.co/60x60/eggs' },
-  { id: '1005', name: 'Banana', price: 0.59, image: 'https://placehold.co/60x60/banana' },
-  { id: '1006', name: 'Chicken Breast', price: 6.99, image: 'https://placehold.co/60x60/chicken' },
-  { id: '1007', name: 'Orange Juice', price: 3.99, image: 'https://placehold.co/60x60/oj' },
-  { id: '1008', name: 'Cereal', price: 4.49, image: 'https://placehold.co/60x60/cereal' },
-];
-
 const COUPON_NFT_ADDRESS = '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9';
-
 function SalesPage() {
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState([]);
@@ -32,11 +19,37 @@ function SalesPage() {
   const [billNo, setBillNo] = useState('');
   const [mintHash, setMintHash] = useState('');
   const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [inventory, setInventory] = useState([]);
+  const [loadingInventory, setLoadingInventory] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
-  const filteredProducts = PRODUCTS.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.id.includes(search)
+  useEffect(() => {
+    fetchInventory();
+  }, []);
+
+  const fetchInventory = async () => {
+    setLoadingInventory(true);
+    try {
+      const snapshot = await getDocs(collection(db, 'inventory'));
+      // Always set id: doc.id
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setInventory(data);
+    } catch (err) {
+      setInventory([]);
+    }
+    setLoadingInventory(false);
+  };
+
+  // Show all products, regardless of cart
+  const filteredProducts = inventory.filter(p =>
+    p.name.toLowerCase().includes(search.toLowerCase()) || (p.id && p.id.includes(search))
   );
+
+  // Helper: get quantity of a product in the cart
+  const getCartQty = (productId) => {
+    const item = cart.find(i => i.id === productId);
+    return item ? item.qty : 0;
+  };
 
   const addToCart = (product) => {
     setCart(prev => {
@@ -105,15 +118,27 @@ function SalesPage() {
   const handleCheckout = async () => {
     setError('');
     setMintHash('');
-    let provider, signer, tx, ethTxHash = '', mintTxHash = '';
+    setCheckoutLoading(true);
     try {
+      // 1. Check stock in Firebase for each cart item using doc ID
+      for (const cartItem of cart) {
+        const itemRef = doc(db, 'inventory', cartItem.id);
+        const itemSnap = await getDocs(collection(db, 'inventory'));
+        const itemDoc = itemSnap.docs.find(d => d.id === cartItem.id);
+        const itemData = itemDoc ? itemDoc.data() : null;
+        if (!itemData || cartItem.qty > itemData.qty) {
+          setCheckoutLoading(false);
+          setError(`Insufficient stock for ${cartItem.name}. You requested ${cartItem.qty}, but only ${itemData ? itemData.qty : 0} left in inventory.`);
+          return;
+        }
+      }
       console.log('--- Checkout started ---');
       if (!window.ethereum) throw new Error('MetaMask not detected');
       await window.ethereum.request({ method: 'eth_requestAccounts' });
       console.log('MetaMask account access granted');
+      let provider, signer, tx, ethTxHash = '', mintTxHash = '';
       provider = new ethers.BrowserProvider(window.ethereum);
       signer = await provider.getSigner();
-      console.log('MetaMask provider and signer set');
       // Payment logic (send to self)
       const ethPrice = 1000; // USD per ETH (static for demo)
       const ethAmount = (total / ethPrice).toFixed(6);
@@ -206,8 +231,26 @@ function SalesPage() {
           console.warn('Coupon not found in Firestore, cannot delete.');
         }
       }
+      // 3. After successful payment, update inventory in Firebase using doc ID
+      for (const cartItem of cart) {
+        const itemRef = doc(db, 'inventory', cartItem.id);
+        const itemSnap = await getDocs(collection(db, 'inventory'));
+        const itemDoc = itemSnap.docs.find(d => d.id === cartItem.id);
+        const itemData = itemDoc ? itemDoc.data() : null;
+        if (itemDoc && itemData) {
+          await updateDoc(itemRef, { qty: itemData.qty - cartItem.qty });
+        }
+      }
+      // After checkout, refresh inventory and clear cart
+      await fetchInventory();
+      setCart([]);
+      setCouponCode('');
+      setCoupon(null);
+      setDiscount(0);
+      setCheckoutLoading(false);
 
     } catch (err) {
+      setCheckoutLoading(false);
       setError(err.message || 'Checkout failed');
       console.error('Checkout error:', err);
     }
@@ -216,30 +259,59 @@ function SalesPage() {
   return (
     <div className="sales-container">
       <h1 className="sales-header">Sales / Billing</h1>
-      <div className="mb-6 flex gap-4">
+      <div className="mb-6 flex gap-4 items-center">
         <input
           type="text"
-          placeholder="Search products or scan barcode..."
+          placeholder="Search inventory..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="input-field w-full"
         />
       </div>
-      <div className="sales-product-grid">
-        {filteredProducts.map(product => (
-          <div key={product.id} className="sales-product-card">
-            <img src={product.image} alt={product.name} />
-            <div className="name">{product.name}</div>
-            <div className="price">${product.price.toFixed(2)}</div>
-            <button
-              className="add-btn"
-              onClick={() => addToCart(product)}
-            >
-              Add
-            </button>
+      {loadingInventory ? (
+        <div className="loading-spinner"><div className="spinner"></div></div>
+      ) : (
+        <div className="product-list">
+          {filteredProducts.length === 0 ? (
+            <div className="empty-state">No items found in inventory.</div>
+          ) : (
+            <div className="sales-product-grid">
+              {filteredProducts.map(product => {
+                const cartQty = getCartQty(product.id);
+                const availableQty = product.qty - cartQty;
+                return (
+                  <div key={product.id} className="sales-product-card">
+                    <div className="product-info">
+                      <div className="product-name">{product.name}</div>
+                      <div className="product-price">${product.price.toFixed(2)}</div>
+                      {product.qty < 10 && (
+                        <div className="low-stock-msg">
+                          HURRY!...ONLY {product.qty} NO OF ITEMS LEFT...
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      className="add-btn"
+                      onClick={() => addToCart(product)}
+                      disabled={availableQty <= 0}
+                    >
+                      {availableQty <= 0 ? 'Out of Stock' : 'Add to Cart'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+      {checkoutLoading && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="loading-spinner"><div className="spinner"></div></div>
+            <div style={{ textAlign: 'center', marginTop: 16 }}>Processing your order, please wait...</div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
       <div className="sales-cart">
         <h2 className="text-lg font-bold mb-4">Cart</h2>
         {cart.length === 0 ? <div className="text-text-secondary">Cart is empty.</div> : (
@@ -310,9 +382,9 @@ function SalesPage() {
         <button
           className="pay-btn"
           onClick={handleCheckout}
-          disabled={cart.length === 0}
+          disabled={cart.length === 0 || checkoutLoading}
         >
-          Pay & Checkout
+          {checkoutLoading ? 'Processing...' : 'Pay & Checkout'}
         </button>
       </div>
       {showReceiptModal && receipt && (

@@ -20,7 +20,8 @@ import {
   Lock,
   Unlock,
   Tag,
-  ShoppingCart
+  ShoppingCart,
+  Box
 } from 'lucide-react';
 
 const AdminPanel = ({ wallet: walletProp }) => {
@@ -30,7 +31,7 @@ const AdminPanel = ({ wallet: walletProp }) => {
     { to: '/coupons', label: 'Coupons', icon: Tag },
     { to: '/sales', label: 'Sales', icon: ShoppingCart },
     { to: '/returns', label: 'Returns Management', icon: FileText },
-    
+    { to: '/inventory', label: 'Inventory', icon: Box },
   ];
   const connectWallet = async () => {
     if (window.ethereum) {

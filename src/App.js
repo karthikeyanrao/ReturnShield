@@ -9,6 +9,7 @@ import AdminPanel from './components/AdminPanel';
 import Login from './components/Login';
 import CouponsPage from './components/CouponsPage';
 import SalesPage from './components/SalesPage';
+import InventoryPage from './components/InventoryPage';
 import { db } from './firebase';
 import { doc, getDoc, updateDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import MainLayout from './components/MainLayout';
@@ -171,6 +172,7 @@ function AppRoutes() {
         <Route path="/sales" element={<SalesPage />} />
         <Route path="/returns" element={<Returns />} />
         <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/inventory" element={<InventoryPage />} />
       </Route>
     </Routes>
   );

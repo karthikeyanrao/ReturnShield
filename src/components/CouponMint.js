@@ -101,6 +101,7 @@ const CouponMint = ({ onCancel }) => {
         value: parseFloat(form.value),
         expiry: new Date(form.expiry),
         hash: txHash,
+        mintTxHash: txHash, // Store both for compatibility
         createdAt: new Date(),
         createdBy: 'admin',
       });
@@ -168,6 +169,7 @@ async function mintCouponOnChainWithTx({ to, couponCode, tokenURI, value, expiry
       value: parseFloat(value),      // use value from arguments
       expiry: new Date(expiry),      // use expiry from arguments
       hash: tx.hash,
+      mintTxHash: tx.hash, 
       createdAt: new Date(),
       createdBy: 'admin',
     });
