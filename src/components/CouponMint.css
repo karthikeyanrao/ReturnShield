@@ -1,0 +1,113 @@
+/* CouponMint.css - Custom styles for CouponMint component */
+
+.coupon-mint-container {
+  background: #232324; /* greyish black */
+  padding: 2rem;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px #000000, 0 0 16px 2px #2d3a8c33;
+  width: 100%;
+  max-width: 100vw;
+  margin: 2rem 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .coupon-mint-container {
+    padding: 1rem;
+  }
+}
+
+.coupon-mint-title {
+  color: #fff;
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.coupon-mint-form label {
+  color: #e5e7eb;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.coupon-mint-form input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #2d2d2d; /* lighter grey */
+  color: #fff;
+  font-size: 1rem;
+  margin-bottom: 1.2rem;
+  transition: border 0.2s;
+}
+.coupon-mint-form input:focus {
+  border: 1.5px solid #2563eb;
+  outline: none;
+}
+
+.coupon-mint-form .text-status-alert {
+  color: #ef4444;
+  margin-bottom: 0.5rem;
+}
+.coupon-mint-form .text-status-success {
+  color: #22c55e;
+  margin-bottom: 0.5rem;
+}
+
+.coupon-mint-form .coupon-mint-btn,
+.coupon-mint-form .coupon-mint-cancel {
+  flex: 1 1 0;
+  min-width: 0;
+  margin-bottom: 0.5rem;
+}
+
+.coupon-mint-form .coupon-mint-btn + .coupon-mint-cancel {
+  margin-left: 1rem;
+}
+
+.coupon-mint-form .coupon-mint-btn,
+.coupon-mint-form .coupon-mint-cancel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coupon-mint-form .coupon-mint-btn,
+.coupon-mint-form .coupon-mint-cancel {
+  padding: 0.9rem 0;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.coupon-mint-form .coupon-mint-btn {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 2px 8px #2563eb44;
+}
+.coupon-mint-form .coupon-mint-btn:hover {
+  background: #1d4ed8;
+  box-shadow: 0 4px 16px #2563eb66;
+}
+
+.coupon-mint-form .coupon-mint-cancel {
+  background: #ef4444;
+  color: #fff;
+  box-shadow: 0 2px 8px #ef444444;
+}
+.coupon-mint-form .coupon-mint-cancel:hover {
+  background: #b91c1c;
+  box-shadow: 0 4px 16px #ef444466;
+}
+
+.coupon-mint-form .flex {
+  display: flex;
+  gap: 1rem;
+} 

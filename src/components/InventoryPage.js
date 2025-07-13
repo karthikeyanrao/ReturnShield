@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, addDoc, getDocs, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
-import './CouponPage.css';
+import './Inventory.css';
 
 const InventoryPage = () => {
   const [items, setItems] = useState([]);
@@ -103,20 +103,19 @@ const InventoryPage = () => {
   };
 
   return (
-    <div className="coupons-container">
-      <div className="coupons-header">
-        <h1 className="coupons-title">Inventory</h1>
+    <div className="inventory-container">
+      <div className="inventory-header">
+        <h1 className="inventory-title">Inventory</h1>
       </div>
-      <div className="coupons-content">
-        <form onSubmit={handleSubmit} className="space-y-4 mb-8">
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+      <div className="inventory-content">
+        <form onSubmit={handleSubmit}>
+          <div className="inventory-form-row">
             <input
               name="name"
               placeholder="Item Name"
               value={form.name}
               onChange={handleChange}
-              className="input-field"
-              style={{ flex: 2 }}
+              className="inventory-input"
             />
             <input
               name="qty"
@@ -124,8 +123,7 @@ const InventoryPage = () => {
               placeholder="Quantity"
               value={form.qty}
               onChange={handleChange}
-              className="input-field"
-              style={{ flex: 1 }}
+              className="inventory-input"
             />
             <input
               name="price"
@@ -133,15 +131,14 @@ const InventoryPage = () => {
               placeholder="Price"
               value={form.price}
               onChange={handleChange}
-              className="input-field"
-              style={{ flex: 1 }}
+              className="inventory-input"
             />
-            <button type="submit" className="new-coupon-btn" style={{ flex: 1, minWidth: 120 }}>
+            <button type="submit" className="inventory-btn">
               Add / Update Item
             </button>
           </div>
-          {error && <div className="text-status-alert">{error}</div>}
-          {success && <div className="text-status-success">{success}</div>}
+          {error && <div className="inventory-alert">{error}</div>}
+          {success && <div className="inventory-success">{success}</div>}
         </form>
         {loading ? (
           <div className="loading-spinner">
@@ -154,8 +151,8 @@ const InventoryPage = () => {
             <div className="empty-state-subtext">Add your first item to get started</div>
           </div>
         ) : (
-          <div className="coupons-table-container">
-            <table className="coupons-table">
+          <div className="inventory-table-container">
+            <table className="inventory-table">
               <thead>
                 <tr>
                   <th>Item Name</th>
@@ -174,7 +171,7 @@ const InventoryPage = () => {
                           type="number"
                           value={editInputs[item.id]?.qty || ''}
                           onChange={e => handleEditInput(item.id, 'qty', e.target.value)}
-                          style={{ width: 60, padding: '2px 6px', borderRadius: 4, border: '1px solid #ccc' }}
+                          className="inventory-edit-input"
                         />
                       ) : (
                         item.qty
@@ -186,7 +183,7 @@ const InventoryPage = () => {
                           type="number"
                           value={editInputs[item.id]?.price || ''}
                           onChange={e => handleEditInput(item.id, 'price', e.target.value)}
-                          style={{ width: 80, padding: '2px 6px', borderRadius: 4, border: '1px solid #ccc' }}
+                          className="inventory-edit-input"
                         />
                       ) : (
                         `$${item.price.toFixed(2)}`
@@ -195,11 +192,11 @@ const InventoryPage = () => {
                     <td>
                       {editing[item.id] ? (
                         <>
-                          <button style={{ marginRight: 6, background: '#22c55e', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 10px', fontWeight: 600, cursor: 'pointer' }} onClick={() => handleSaveEdit(item.id)}>Save</button>
-                          <button style={{ background: '#f59e42', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 10px', fontWeight: 600, cursor: 'pointer' }} onClick={() => handleCancelEdit(item.id)}>Cancel</button>
+                          <button className="inventory-save-btn" onClick={() => handleSaveEdit(item.id)}>Save</button>
+                          <button className="inventory-cancel-btn" onClick={() => handleCancelEdit(item.id)}>Cancel</button>
                         </>
                       ) : (
-                        <button style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 10px', fontWeight: 600, cursor: 'pointer' }} onClick={() => handleEdit(item)}>Update Stock</button>
+                        <button className="inventory-btn" onClick={() => handleEdit(item)}>Update</button>
                       )}
                     </td>
                   </tr>

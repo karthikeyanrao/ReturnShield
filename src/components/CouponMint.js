@@ -5,6 +5,7 @@ import { ethers } from 'ethers';
 import CouponNFTABI from '../contracts/CouponNFT.json';
 import { isAddress } from 'ethers';
 import axios from 'axios';
+import './CouponMint.css';
 const PINATA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIzNDE3OGU2Yi1hYjc2LTRjZTUtODY3NC1hYjVjNDAwMGZiMDAiLCJlbWFpbCI6InJpcHBsZXNrYXJ0aGlAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjY4MGM0MDQ0YzcwMDkxN2NkNmI0Iiwic2NvcGVkS2V5U2VjcmV0IjoiNTc4ZDE1NjQwNThiZDJmMGYzZjdkYTkwZTFjMmM0ODcyMjZhM2MwMTExMjZjZjQ5MzI5Y2MxZmQ3YjhlZjczZCIsImV4cCI6MTc4MzQ5NjM2OH0.XLR9uHjDAuX13WVrJtOvzI_enVJDpqf1CBudq_6_Nr8';
 
 function generateCouponCode(length = 10) {
@@ -116,32 +117,32 @@ const CouponMint = ({ onCancel }) => {
   };
 
   return (
-    <div className="bg-background-card p-6 rounded shadow-custom border border-default mb-6">
-      <h2 className="text-xl font-bold mb-4 text-accent-primary">Mint New Coupon</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="coupon-mint-container">
+      <h2 className="coupon-mint-title">Coupon Mint</h2>
+      <form onSubmit={handleSubmit} className="coupon-mint-form">
         <div>
-          <label className="block mb-1 font-medium text-text-secondary">Value (USD)</label>
-          <input name="value" type="number" value={form.value} onChange={handleChange} className="input-field w-full bg-background-input border border-input text-text-primary focus:border-border-input-focus" />
+          <label>Value (USD)</label>
+          <input name="value" type="number" value={form.value} onChange={handleChange} />
         </div>
         <div>
-          <label className="block mb-1 font-medium text-text-secondary">Expiry Date</label>
-          <input name="expiry" type="date" value={form.expiry} onChange={handleChange} className="input-field w-full bg-background-input border border-input text-text-primary focus:border-border-input-focus" />
+          <label>Expiry Date</label>
+          <input name="expiry" type="date" value={form.expiry} onChange={handleChange} />
         </div>
         <div>
-          <label className="block mb-1 font-medium text-text-secondary">Owner Wallet Address</label>
-          <input name="owner" value={form.owner} onChange={handleChange} className="input-field w-full bg-background-input border border-input text-text-primary focus:border-border-input-focus" />
+          <label>Owner Wallet Address</label>
+          <input name="owner" value={form.owner} onChange={handleChange} />
         </div>
         <div>
-          <label className="block mb-1 font-medium text-text-secondary">Contract Address</label>
-          <input name="contractAddress" value={form.contractAddress} onChange={handleChange} className="input-field w-full bg-background-input border border-input text-text-primary focus:border-border-input-focus" />
+          <label>Contract Address</label>
+          <input name="contractAddress" value={form.contractAddress} onChange={handleChange} />
         </div>
         {error && <div className="text-status-alert">{error}</div>}
         {success && <div className="text-status-success">{success}</div>}
         <div className="flex gap-4">
-          <button type="submit" disabled={loading} className="w-full py-3 rounded-lg bg-accent-primary hover:bg-hover-blue text-button-cta-text font-semibold text-lg flex items-center justify-center transition">
+          <button type="submit" disabled={loading} className="coupon-mint-btn">
             {loading ? 'Minting...' : 'Mint Coupon'}
           </button>
-          <button type="button" onClick={onCancel} className="w-full py-3 rounded-lg bg-status-alert hover:bg-status-warning text-button-cta-text font-semibold text-lg flex items-center justify-center transition">
+          <button type="button" onClick={onCancel} className="coupon-mint-cancel">
             Cancel
           </button>
         </div>
